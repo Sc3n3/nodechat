@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <!-- <link rel="shortcut icon" href="../../assets/ico/favicon.ico"> -->
+
+    <title>#Chat4Fun!</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="int/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap theme -->
+    <link href="int/css/bootstrap-theme.min.css" rel="stylesheet">
+
+	<link href='https://fonts.googleapis.com/css?family=Titillium+Web:400,200,200italic,300,300italic,400italic,600,700,600italic,700italic,900' rel='stylesheet' type='text/css'>	
+	
+	<style type="text/css">
+		body { background:#EFEFEF; padding-top: 70px; padding-bottom: 70px; font-family: 'Titillium Web',sans-serif; }
+		.channels { display: none; }
+		.channel-list li { padding: 10px; cursor: pointer; }
+		.channel-list li:hover { text-decoration: underline; }
+		.chatpage { display: none; }
+		.msglist li { margin-bottom: 5px; margin-top: 5px; }
+	</style>
+	
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <body role="document">
+
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">#Chat4Fun!</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li class="active"><a href="#">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+            <!--<li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li><a href="#">Action</a></li>
+                <li><a href="#">Another action</a></li>
+                <li><a href="#">Something else here</a></li>
+                <li class="divider"></li>
+                <li class="dropdown-header">Nav header</li>
+                <li><a href="#">Separated link</a></li>
+                <li><a href="#">One more separated link</a></li>
+              </ul>
+            </li>-->
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+
+    <div class="container" role="main">
+
+		<div class="nickname">
+		  <div class="panel panel-default">
+			<div class="panel-heading">Select Nickname</div>
+			<div class="panel-body">
+				<form id="nickForm" class="clearfix">
+					<input class="input input-lg form-control pull-left" style="width: 40%;"></input>
+					<button type="submit" class="btn btn-primary btn-lg pull-left" style="margin-left: 5px; width: 80px;">Submit</button>
+				</form>
+			</div>
+		  </div>
+		</div>
+	
+		<div class="channels">
+		  <div class="panel panel-default">
+			<div class="panel-heading">Select Channel</div>
+			<div class="panel-body"><ul class="channel-list"></ul></div>
+		  </div>
+		</div>
+	
+		<div class="chatpage">
+			<div class="messages" style="margin-top: 10px;">
+				<div class="row">
+					<div class="col-xs-8">
+						<div class="panel panel-default">
+							<div class="panel-heading">Messages</div>
+							<div class="panel-body"><ul class="msglist list-unstyled" style="padding:0;margin:0;padding-left: 5px;"></ul></div>
+						</div>
+					</div>
+					<div class="col-xs-4">
+						<div class="panel panel-default">
+							<div class="panel-heading">Users</div>
+							<div class="panel-body"><ul class="userlist list-unstyled" style="padding:0;margin:0;"></ul></div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="write" style="background:#FFF; position: fixed; bottom: 0; left: 0; width: 100%; padding: 10px; border-top: 1px solid #CCC;">
+				<form id="msgForm" class="clearfix">
+					<textarea id="textbox" class="form-control pull-left" rows="1" style="width: 90%;"></textarea>
+					<button type="submit" class="btn btn-primary btn-lg pull-left" style="margin-left: 1%; width: 9%;">Submit</button>
+				</form>
+			</div>
+		</div>
+	
+    </div> <!-- /container -->
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="int/js/bootstrap.min.js"></script>
+	
+	<script type="text/javascript" src="http://localhost:3000/socket.io/socket.io.js"></script>
+	<script type="text/javascript">
+		var socket = io.connect("http://localhost:3000");
+		
+		if (navigator.geolocation) {
+			navigator.geolocation.getCurrentPosition(findPosition);
+		}
+		
+		function findPosition(position){
+			console.log(position.coords.latitude, position.coords.longitude);
+		}
+		
+		$("#textbox").on('keypress', function(e){
+			if(e.which == 13){ $("#msgForm").submit(); $(this).val(""); return false; }
+		});
+		
+		$("#nickForm").submit(function(){
+			$Nick = $(this).find("input").val();
+			if($Nick != ""){
+				socket.emit('nickname', $Nick);
+			}
+			return false;
+		});
+		
+		socket.on('channelList', function(response){
+			$(".nickname").hide();
+			$(".channels").show();
+			
+			for(i=0; i < response.length; i++){
+				Item = response[i];
+				$("<li></li>").attr("data-channel", i).html(Item).click(function(){ socket.emit('enterChannel', $(this).attr("data-channel")); }).appendTo("ul.channel-list");
+			}
+		});
+		socket.on('enterChannel', function(response){
+			$("<li></li>").html(response).appendTo(".chatpage .channels");
+			$(".channels").hide();
+			$(".chatpage").show();
+		});
+		socket.on('updateUsers', function(response){
+			$(".messages .userlist").empty();
+			for(i = 0; i < response.length; i++){
+				$("<li></li>").html(response[i]).appendTo(".messages .userlist");
+			}
+		});
+		socket.on('msg', function(response){ $("<li></li>").html(response).hide().prependTo(".chatpage .msglist").fadeIn("slow"); });
+		socket.on('log', function(response){ console.log(response); });
+		window.onbeforeunload = function(){ socket.emit('close'); };
+		
+		$("#msgForm").submit(function(){
+			$Text = $(this).find("textarea").val();
+			
+			if($Text != ""){
+				socket.emit('sendMsg', $Text);
+				$(this).find("textarea").val("");
+			}
+			
+			return false;
+		});
+	</script>
+  </body>
+</html>

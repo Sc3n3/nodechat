@@ -29,10 +29,8 @@ io.sockets.on('connection',function(socket){
 			if($channelUsers[request] == undefined){ $channelUsers[request] = []; }
 			$channelUsers[request].push($nick);
 			socket.emit('enterChannel', $channels[request]);
-			socket.emit('updateUsers', $channelUsers[request]);
-			socket.emit('msg', "<i style='color: green'><strong>"+ $nick +"</strong> has joined!</i>");
-			socket.broadcast.emit('updateUsers', $channelUsers[request]);
-			socket.broadcast.emit('msg', "<i style='color: green'><strong>"+ $nick +"</strong> has joined!</i>");
+			io.sockets.emit('updateUsers', $channelUsers[request]);
+			io.sockets.emit('msg', "<i style='color: green'><strong>"+ $nick +"</strong> has joined!</i>");
 			$active = request;
 		}
 	});
@@ -47,8 +45,6 @@ io.sockets.on('connection',function(socket){
 	});
 	socket.on('sendMsg', function(request){
 		request = clearText(request);
-		socket.emit('msg', "<strong>"+ $nick +":</strong> "+ request);
-		socket.broadcast.emit('msg', "<strong>"+ $nick +":</strong> "+ request);
-		io.sockets.socket($sockets[$nick]).emit('msg', "test");
+		io.sockets.emit('msg', "<strong>"+ $nick +":</strong> "+ request);
 	});
 });

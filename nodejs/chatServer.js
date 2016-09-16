@@ -3,6 +3,11 @@ var io = require('socket.io').listen(3000);
 var $channels = [ "İstanbul", "İzmir", "Ankara", "Antalya" ];
 var $users = [];
 var $channelUsers = [];
+var $sockets = {};
+
+function clearText(text){
+	return text.replace(/(<)/ig, "&lt;").replace(/(>)/ig, "&gt;");
+}
 
 io.sockets.on('connection',function(socket){
 
@@ -10,11 +15,12 @@ io.sockets.on('connection',function(socket){
 	var $messages = [];
 	var $active = "";
 	
-	socket.on('nickname', function(request){ 
+	socket.on('nickname', function(request){
+		request = clearText(request);
 		if($users.indexOf(request) == -1){
 			$nick = request;
-			$nick = $nick.replace(/(<([^>]+)>)/ig, "");
 			$users.push($nick);
+			$sockets[$nick] = socket.id;
 			socket.emit('channelList', $channels);
 		}
 	});
@@ -40,8 +46,9 @@ io.sockets.on('connection',function(socket){
 		}
 	});
 	socket.on('sendMsg', function(request){
-		request = request.replace(/(<)/ig, "&lt;").replace(/(>)/ig, "&gt;");
+		request = clearText(request);
 		socket.emit('msg', "<strong>"+ $nick +":</strong> "+ request);
 		socket.broadcast.emit('msg', "<strong>"+ $nick +":</strong> "+ request);
+		io.sockets.socket($sockets[$nick]).emit('msg', "test");
 	});
 });
